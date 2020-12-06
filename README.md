@@ -8,4 +8,5 @@ To develope a workflow to quantitatiley analyze under water rugby games.
 ## Examples
 ### World Championships, DENMARK-GERMANY
 Alle Dateien für die Fortbildung "Spielanalyse" können im Ordner Präsentation gefunden werden
-![](./presentation/analyse5.png | width=100)
+
+![](presentation/analyse5.png | width=100)
