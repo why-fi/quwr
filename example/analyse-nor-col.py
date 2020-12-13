@@ -115,9 +115,10 @@ class IntervallAction:
 
 
 class Team:
-    def __init__(self, name, identifier):
+    def __init__(self, name, identifier, color):
         self.name       = name
         self.identifier = identifier
+        self.color      = color
 
         self.possession = []
         self.attack     = []
@@ -151,20 +152,23 @@ class Team:
 def plotside(ax, h, width=0.4):
     ax.plot([0, 48*60000, 48*60000, 0], h + np.array([width, width, -width, -width]), 'w', linewidth=0.5, color='w')
 #%% Read and prepare Data
-iData   = pd.read_csv('col-nor.csv')
-game    = Game()
-game.readGameFromFrame(iData)
-teams = [Team('NOR', 'weiss'), Team('COL', 'blau'), Team('REF', 'referee')]
-for team in teams:
-    team = team.readWilliGame(game)
 
 
-#%% Figure
 # colors
 bgc = np.array([1,1,1])*0
 tcb = np.array([103,169,240])/255
 tcw = np.array([1,1,1])*1
 cg  = np.array([1,1,1])*0.3
+
+iData   = pd.read_csv('col-nor.csv')
+game    = Game()
+game.readGameFromFrame(iData)
+teams = [Team('NOR', 'weiss', tcw), Team('COL', 'blau', tcb), Team('REF', 'referee', [1., 0.3, 0.3])]
+for team in teams:
+    team.readWilliGame(game)
+
+
+#%% Figure
 
 
 fig, ax0 = plt.subplots(1, constrained_layout=True, figsize=(16,5))
@@ -173,11 +177,11 @@ axs = [ax0.twiny(), ax0]
 
 for ax in axs:
     t0, te = game.getTimeFrame()
-#    ax.set_xlim(t0, te)
+    ax.set_xlim(t0, te)
     ax.set_facecolor(bgc)
-#    ax.xaxis.set_ticks(np.arange(t0, te, 5*60))
-#    formatter = matplotlib.ticker.FuncFormatter(lambda s, x: time.strftime('%M:%S', time.gmtime(s)))
-#    ax.xaxis.set_major_formatter(formatter)
+    ax.xaxis.set_ticks(np.arange(t0, te, 5*60))
+    formatter = matplotlib.ticker.FuncFormatter(lambda s, x: time.strftime('%M:%S', time.gmtime(s)))
+    ax.xaxis.set_major_formatter(formatter)
 ax.set_xlabel('time (mm:ss, continuous)')
 
 
@@ -187,81 +191,18 @@ ax.yaxis.set_ticks(yticks)
 ax.set_yticklabels(ylabel)
 ax.set_ylim([-1, 1])
 
-c = 0
-l = 1
-teams[0].possession.plot(ax, tcb, label = 'possession', lower=c-l, upper=c+l)
+
+cs      = [0.2, 0.35]               # center line to plot on
+ls      = [0.1, 0.1]                # width around center line
+cats    = ['possession', 'attack']
+for idc in range(0, len(cs)):
+    c   = cs[idc]
+    l   = ls[idc]
+    cat = cats[idc]
+    getattr(teams[0], cat).plot(ax, tcb, label=cat, lower=c-l, upper=c+l)
+    getattr(teams[1], cat).plot(ax, tcw, label=cat, lower=-c-l, upper=-c+l)
+
+teams[2].scrum.plot(ax, teams[2].color, label='scrum', lower=-l, upper=l)
 
 
-#%%
-c = 0; l = 0.1; j = 0; #
-plotside(ax, 0, width=l)
-ax.plot(np.ones(2)*(18*6e4+50e3), [-1, +1], '--', linewidth=3, label='Halbzeitpause', color=[.5,.5,.5])
-ax.plot(1e3*b['Tor'][0], np.ones_like(b['Tor'][0])*c, '*', color=tcb, markersize=20, markeredgecolor=cg)
-ax.plot(1e3*w['Tor'][0], np.ones_like(w['Tor'][0])*c, '*', color='w', markersize=20, markeredgecolor=cg, label='Tor')
-ax.legend(ncol=5, loc=3)
-fig.savefig('analyse%d.png' % j, facecolor=fig.get_facecolor(), transparent=True, dpi=150); j=j+1
-
-teams = [b, w]
-color = [tcb, tcw]
-label = ['blau', 'weiß']
-
-cgb     = np.array([66, 201, 54])/255
-cs      = [0.2, 0.35, 0.5]
-ls      = [0.1, 0.1, 0.05]
-cats    = ['Ballbesitz', 'Torangriff', 'Strafzeit']
-ccolw   = [tcw, cgb, 'r']
-ccolb   = [tcb, cgb, 'r']
-
-
-for i, cat in enumerate(cats):
-    c = cs[i]
-    l = ls[i]
-    plotTimeXY(b[cat][0], b[cat][1], ax=ax, color=ccolb[i], lower=c-l, upper=c+l)
-    plotTimeXY(w[cat][0], w[cat][1], ax=ax, color=ccolw[i], lower=-c-l, upper=-c+l)
-    #plotside(ax, c, width=l)
-    #plotside(ax, -c, width=l)
-    yticks.append(c)
-    yticks.append(-c)
-    ylabel.append('%s (DEN)' % cat)
-    ylabel.append('%s (GER)' % cat)
-    ax.yaxis.set_ticks(yticks)
-    ax.set_yticklabels(ylabel)
-    ax.set_ylim([-1, 1])
-    fig.savefig('analyse%d.png' % j, facecolor=fig.get_facecolor(), transparent=True, dpi=150); j=j+1
-
-c = 0; l = 0.1
-ax.plot(1e3*b['Freiwurf'][0], np.ones_like(b['Freiwurf'][0])*c, '>', color=tcb, markersize=10, markeredgecolor=cg)
-ax.plot(1e3*w['Freiwurf'][0], np.ones_like(w['Freiwurf'][0])*c, '>', color='w', markersize=10, markeredgecolor=cg, label='Freiwurf')
-ax.legend(ncol=5, loc=3)
-fig.savefig('analyse%d.png' % j, facecolor=fig.get_facecolor(), transparent=True, dpi=150); j=j+1
-
-
-
-plotTimeXY(a['timeout'][0], a['timeout'][1], ax=ax, color=[0.5, .5, .5], label='Auszeit', lower=c-l, upper=c+l)
-plotTimeXY(a['scrum'][0],   a['scrum'][1],   ax=ax, color=[1., 0.3, 0.3], label='Gerangel', lower=c-l, upper=c+l)
-ax.legend(ncol=5, loc=3)
-fig.savefig('analyse%d.png' % j, facecolor=fig.get_facecolor(), transparent=True, dpi=150); j=j+1
-
-
-
-
-
-#%% Statistiken
-bbw_g = np.sum(b['ballbesitz'][1] - b['ballbesitz'][0])
-bbb_g = np.sum(w['ballbesitz'][1] - w['ballbesitz'][0])
-bb_total = bbb_g + bbw_g
-fb = len(b['freiwurf'][0])
-fw = len(w['freiwurf'][0])
-
-ab = len(b['angriff'][0])
-aw = len(w['angriff'][0])
-
-mab = np.mean(np.diff(b['angriff'], axis=0))
-maw = np.mean(np.diff(w['angriff'], axis=0))
-
-print('Dänemark \t\t\t Deutschland')
-print('%d   \t\t Pässe \t %d' % (0, len(w['pass'][0])))
-print('%.1f \t\t Ballbesitz \t %.1f' % (bbb_g/bb_total*100, bbw_g/bb_total*100))
-print('%d   \t\t Angriffe \t %d' % (ab, aw))
-print('%.1f \t\t Angriffsdauer \t %.1f' % (mab, maw))
-print('%d   \t\t Freiwürfe \t %d' % (fb, fw))
+# %%
