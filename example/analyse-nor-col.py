@@ -17,7 +17,6 @@ font = {'family' : 'normal',
 matplotlib.rc('font', **font)
 
 #%% FUNCTION AND DEFINITION SECTION
-#def parseDataFrame(dataframe, language='willi'):
 class Game:
     def __init__(self):
         self.category   = []
@@ -113,13 +112,12 @@ class Team:
         self.attack     = []
 
         self.penalty    = []        
-        self.pThrow     = []
+        self.freeThrow  = []
         self.passes     = []
         self.misspass   = []
             
     def setIntervallCategory(self, category, category_identifier, game):
         start, end = game.getEntries(category_identifier, self.identifier)
-        print(category_identifier)
         setattr(self, category, IntervallAction(start, end))
 
     def setEventCategory(self, category, category_identifier, game):
@@ -127,36 +125,29 @@ class Team:
         setattr(self, category, start)
 
     def readWilliGame(self, game):
-        iCats       = ['BB', 'TA']
-        iCatIdents  = ['possession', 'attack']
-        eCats       = []
-        eCatIdents  = []
+        iCats       = ['BB', 'TA', 'Scrum']
+        iCatIdents  = ['possession', 'attack', 'possession']
+        eCats       = ['Unterbrechung']
+        eCatIdents  = ['freeThrow']
         for idc, iCat in enumerate(iCats):
             self.setIntervallCategory(iCatIdents[idc], iCat, game)
         for ide, eCat in enumerate(eCats):
-            self.setIntervallCategory(eCat, eCatIdents[idc], game)
+            self.setEventCategory(eCat, eCatIdents[ide], game)
         
 
-iData   = pd.read_csv('col-nor.csv')
-nc      = Game()
-nc.readGameFromFrame(iData)
 
-norway = Team('NOR', 'weiss')
-norway.readWilliGame(nc)
+iData   = pd.read_csv('col-nor.csv')
+game    = Game()
+game.readGameFromFrame(iData)
+norway      = Team('NOR', 'weiss')
+columbia    = Team('COL', 'blau')
+refs        = Team('REF', 'referre')
+teams = [norway, columbia, refs]
+for team in teams:
+    team.readWilliGame(game)
+
 
 #%%
-
-
-def getTimeXY(start, stop, lower=0, upper=1):
-    x = np.ones(len(start)*3)*lower
-    y0 = np.ones_like(x)*lower
-    y1 = np.ones_like(x)*upper
-    w0 = np.ones_like(x)
-    x[0::3] = start
-    x[1::3] = stop    
-    x[2::3] = stop
-    w0[2::3] = 0
-    return x, y0, y1, w0
 
 
 def plotTimeXY(start, stop, ax, color, label=[], lower=0, upper=1):
@@ -169,26 +160,6 @@ def plotTimeXY(start, stop, ax, color, label=[], lower=0, upper=1):
 
 def plotside(ax, h, width=0.4):
     ax.plot([0, 48*60000, 48*60000, 0], h + np.array([width, width, -width, -width]), 'w', linewidth=0.5, color='w')
-
-a = dict()
-b = dict()
-w = dict()
-
-a['scrum']      = importTag(r'scrum.xlsx')
-a['timeout']    = importTag(r'timeout.xlsx')
-
-b['Ballbesitz'] = importTag(r'ballbesitzb.xlsx')
-b['Tor']        = importTag(r'torb.xlsx')
-b['Freiwurf']   = importTag(r'freib.xlsx')
-b['Torangriff']    = importTag(r'angriffb.xlsx')
-b['Strafzeit']    = importTag(r'strafzeitb.xlsx')
-
-w['Ballbesitz'] = importTag(r'ballbesitzw.xlsx')
-w['Pass']       = importTag(r'passw.xlsx')
-w['Tor']        = importTag(r'torw.xlsx')
-w['Freiwurf']   = importTag(r'freiw.xlsx')
-w['Torangriff']    = importTag(r'angriffw.xlsx')
-w['Strafzeit']    = importTag(r'strafzeitw.xlsx')
 
 #%% Abbildung
 bgc = np.array([1,1,1])*0
