@@ -41,6 +41,16 @@ class Game:
             self.start[idi]     = (self.trackerDate(frame['Start'][idi]) - t0).total_seconds()
             self.end[idi]       = (self.trackerDate(frame['End'][idi]) - t0).total_seconds()
 
+    def getCategories(self):
+        uCats = np.unique(self.category)
+        return uCats
+
+    def getEntries(self, category, team):
+        sorter = self.category == category and self.team == team
+        starts = self.start[sorter]
+        ends   = self.end[sorter]
+        return starts, stops, stops-starts
+
     def __str__(self):
         s = 'Category\t Team\t Start\t End\n'
         for ide in range(len(self.category)):
@@ -50,7 +60,6 @@ class Game:
         return s
     def __repr__(self):
         return self.__str__()
-
 
     @staticmethod
     def trackerDate(datestr):
@@ -68,32 +77,23 @@ class Game:
         return cat, team
 
 
-class IntervallAction():
-    def __init__(self, start, stop, end):
-        self.start      = []
-        self.stop       = []
-        self.duration   = []
-
-
 class Team:
     def __init__(self):
         self.possession = []
         self.attack     = []
-        self.penalty    = []
-        
+
+        self.penalty    = []        
         self.pThrow     = []
         self.passes     = []
         self.misspass   = []
 
-    def setIntervallProperty(self, category, startTime, stopTime):
-        interObject = np.zeros((len(startTime), 3))
-        for idt in range(0, len(start)):
-            x = '0'
+    def loadIntervallProperty:
+        ''
             
 
 iData   = pd.read_csv('col-nor.csv')
-norcol  = Game()
-norcol.readGameFromFrame(iData)
+nc      = Game()
+nc.readGameFromFrame(iData)
 
 #%%
 def importTag(fName, t0   = datetime(1900, 1, 1, 0, 0, 0, 0)):
