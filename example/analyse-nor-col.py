@@ -46,10 +46,10 @@ class Game:
         return uCats
 
     def getEntries(self, category, team):
-        sorter = self.category == category and self.team == team
+        sorter = np.logical_and(self.category == category, self.team == team)
         starts = self.start[sorter]
         ends   = self.end[sorter]
-        return starts, stops, stops-starts
+        return starts, ends
 
     def __str__(self):
         s = 'Category\t Team\t Start\t End\n'
@@ -77,8 +77,38 @@ class Game:
         return cat, team
 
 
+class IntervallAction:
+    def __init__(self, start, end):
+        self.start      = start
+        self.end        = end
+        self.duration   = end-start
+
+    def __str__(self):
+        s = ''
+        for idi in range(0, len(self.start)):
+            s += '%.4d\t %.4d\t %.4d\n' % (self.start[idi], self.end[idi], self.duration[idi])
+        return s
+    
+    def __repr__(self):
+        return self.__str__()
+
+    def getXYTime(self, lower=0, upper=0):
+        x = np.ones(len(self.start)*3)*lower
+        y0 = np.ones_like(x)*lower
+        y1 = np.ones_like(x)*upper
+        w0 = np.ones_like(x)
+        x[0::3] = self.start
+        x[1::3] = self.end    
+        x[2::3] = self.end
+        w0[2::3] = 0
+        return x, y0, y1, w0
+
+
 class Team:
-    def __init__(self):
+    def __init__(self, name, identifier):
+        self.name       = name
+        self.identifier = identifier
+
         self.possession = []
         self.attack     = []
 
@@ -86,25 +116,36 @@ class Team:
         self.pThrow     = []
         self.passes     = []
         self.misspass   = []
-
-    def loadIntervallProperty:
-        ''
             
+    def setIntervallCategory(self, category, category_identifier, game):
+        start, end = game.getEntries(category_identifier, self.identifier)
+        print(category_identifier)
+        setattr(self, category, IntervallAction(start, end))
+
+    def setEventCategory(self, category, category_identifier, game):
+        start, end = game.getEntries(category_identifier, self.identifier)
+        setattr(self, category, start)
+
+    def readWilliGame(self, game):
+        iCats       = ['BB', 'TA']
+        iCatIdents  = ['possession', 'attack']
+        eCats       = []
+        eCatIdents  = []
+        for idc, iCat in enumerate(iCats):
+            self.setIntervallCategory(iCatIdents[idc], iCat, game)
+        for ide, eCat in enumerate(eCats):
+            self.setIntervallCategory(eCat, eCatIdents[idc], game)
+        
 
 iData   = pd.read_csv('col-nor.csv')
 nc      = Game()
 nc.readGameFromFrame(iData)
 
+norway = Team('NOR', 'weiss')
+norway.readWilliGame(nc)
+
 #%%
-def importTag(fName, t0   = datetime(1900, 1, 1, 0, 0, 0, 0)):
-    dframe  = pd.read_excel(fName)
-    cols    = pd.DataFrame(dframe, columns=['Beginning', 'End'])
-    start   = np.zeros(len(cols['Beginning']))
-    end     = np.zeros(len(cols['Beginning']))
-    for idc in range(0, len(cols)):
-        start[idc] = (datetime.strptime(cols['Beginning'][idc], '%d.%M.%Y %h:%m:%s') - t0).total_seconds()
-        end[idc]   = (datetime.strptime(cols['End'][idc], '%H:%M:%S,%f') - t0).total_seconds()
-    return start, end
+
 
 def getTimeXY(start, stop, lower=0, upper=1):
     x = np.ones(len(start)*3)*lower
