@@ -50,6 +50,9 @@ class Game:
         ends   = self.end[sorter]
         return starts, ends
 
+    def getTimeFrame(self):
+        return np.array([np.min(self.start), np.max(self.end)])
+
     def __str__(self):
         s = 'Category\t Team\t Start\t End\n'
         for ide in range(len(self.category)):
@@ -60,6 +63,7 @@ class Game:
     def __repr__(self):
         return self.__str__()
 
+    
     @staticmethod
     def trackerDate(datestr):
         return datetime.strptime(datestr, '%d.%m.%Y %H:%M:%S')
@@ -105,9 +109,9 @@ class IntervallAction:
     def plot(self, ax, color, label=[], lower=0, upper=1):
         x, y0, y1, w = self.getXYTime(lower=lower, upper=upper)
         if label==[]:
-            ax.fill_between(x*1e3, y0, y1, where=w, color=color, edgecolor='none')
+            ax.fill_between(x, y0, y1, where=w, color=color, edgecolor='none')
         else:
-            ax.fill_between(x*1e3, y0, y1, where=w, color=color, label=label,edgecolor='none')
+            ax.fill_between(x, y0, y1, where=w, color=color, label=label,edgecolor='none')
 
 
 class Team:
@@ -127,7 +131,6 @@ class Team:
             
     def setIntervallCategory(self, category, category_identifier, game):
         start, end = game.getEntries(category_identifier, self.identifier)
-        print(self.name, category, start, end)
         setattr(self, category, IntervallAction(start, end))
 
     def setEventCategory(self, category, category_identifier, game):
@@ -169,11 +172,12 @@ fig.patch.set_facecolor(bgc)        # set background color to black
 axs = [ax0.twiny(), ax0]
 
 for ax in axs:
+    t0, te = game.getTimeFrame()
+#    ax.set_xlim(t0, te)
     ax.set_facecolor(bgc)
-#    ax.xaxis.set_ticks(np.arange(5*6e4, 50*60000, 5*60000))
+#    ax.xaxis.set_ticks(np.arange(t0, te, 5*60))
 #    formatter = matplotlib.ticker.FuncFormatter(lambda s, x: time.strftime('%M:%S', time.gmtime(s)))
 #    ax.xaxis.set_major_formatter(formatter)
-#    ax.set_xlim(0, 45*60000)
 ax.set_xlabel('time (mm:ss, continuous)')
 
 
