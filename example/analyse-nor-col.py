@@ -1,6 +1,7 @@
 #%% Funktionen und Datenauslese
 import pandas as pd
-from datetime import datetime
+from datetime import datetime 
+import datetime as dt
 from matplotlib import pyplot as plt
 import matplotlib
 import numpy as np
@@ -25,19 +26,30 @@ class Game:
         self.end        = []
     
     def readGameFromFrame(self, frame, language='willi', t0=[]):
+        nEntries = len(frame)
         if language == 'willi':
-            self.category   = np.empty_like(rawCats)
-            self.team       = np.empty_like(rawCats)
-            self.start      = np.empty_like(rawCats)
-            self.end        = np.empty_like(rawCats)
+            self.category   = np.empty_like(frame['Work Item'])
+            self.team       = np.empty_like(frame['Work Item'])
+            self.start      = np.empty_like(frame['Work Item'])
+            self.end        = np.empty_like(frame['Work Item'])
         if not t0:
-            t0 = self.trackerDate(frame['Start'][len(rawCats)-1])
-        for idi, rawCat in enumerate(frame['Work Item']):
-            cat, team           = self.splitWilli(rawCat)
+            t0 = self.trackerDate(frame['Start'][nEntries-1])
+        for idi, rawCategory in enumerate(frame['Work Item']):
+            cat, team           = self.splitWilli(rawCategory)
             self.category[idi]  = cat
             self.team[idi]      = team
             self.start[idi]     = (self.trackerDate(frame['Start'][idi]) - t0).total_seconds()
             self.end[idi]       = (self.trackerDate(frame['End'][idi]) - t0).total_seconds()
+
+    def __str__(self):
+        s = 'Category\t Team\t Start\t End\n'
+        for ide in range(len(self.category)):
+            sstr = str(dt.timedelta(seconds=self.start[ide]))
+            estr = str(dt.timedelta(seconds=self.end[ide]))
+            s = s + '%s\t\t %s\t %s \t %s\n' % (self.category[ide], self.team[ide], sstr, estr)
+        return s
+    def __repr__(self):
+        return self.__str__()
 
 
     @staticmethod
