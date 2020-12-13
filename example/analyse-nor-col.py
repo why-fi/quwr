@@ -102,6 +102,13 @@ class IntervallAction:
         w0[2::3] = 0
         return x, y0, y1, w0
 
+    def plot(self, ax, color, label=[], lower=0, upper=1):
+        x, y0, y1, w = self.getXYTime(lower=lower, upper=upper)
+        if label==[]:
+            ax.fill_between(x*1e3, y0, y1, where=w, color=color, edgecolor='none')
+        else:
+            ax.fill_between(x*1e3, y0, y1, where=w, color=color, label=label,edgecolor='none')
+
 
 class Team:
     def __init__(self, name, identifier):
@@ -110,7 +117,9 @@ class Team:
 
         self.possession = []
         self.attack     = []
+        self.scrum      = []
 
+        self.goal       = []
         self.penalty    = []        
         self.freeThrow  = []
         self.passes     = []
@@ -118,6 +127,7 @@ class Team:
             
     def setIntervallCategory(self, category, category_identifier, game):
         start, end = game.getEntries(category_identifier, self.identifier)
+        print(self.name, category, start, end)
         setattr(self, category, IntervallAction(start, end))
 
     def setEventCategory(self, category, category_identifier, game):
@@ -126,7 +136,7 @@ class Team:
 
     def readWilliGame(self, game):
         iCats       = ['BB', 'TA', 'Scrum']
-        iCatIdents  = ['possession', 'attack', 'possession']
+        iCatIdents  = ['possession', 'attack', 'scrum']
         eCats       = ['Unterbrechung']
         eCatIdents  = ['freeThrow']
         for idc, iCat in enumerate(iCats):
@@ -135,56 +145,51 @@ class Team:
             self.setEventCategory(eCat, eCatIdents[ide], game)
         
 
-
+def plotside(ax, h, width=0.4):
+    ax.plot([0, 48*60000, 48*60000, 0], h + np.array([width, width, -width, -width]), 'w', linewidth=0.5, color='w')
+#%% Read and prepare Data
 iData   = pd.read_csv('col-nor.csv')
 game    = Game()
 game.readGameFromFrame(iData)
-norway      = Team('NOR', 'weiss')
-columbia    = Team('COL', 'blau')
-refs        = Team('REF', 'referre')
-teams = [norway, columbia, refs]
+teams = [Team('NOR', 'weiss'), Team('COL', 'blau'), Team('REF', 'referee')]
 for team in teams:
-    team.readWilliGame(game)
+    team = team.readWilliGame(game)
 
 
-#%%
-
-
-def plotTimeXY(start, stop, ax, color, label=[], lower=0, upper=1):
-    x, y0, y1, w = getTimeXY(start, stop, lower=lower, upper=upper)
-    if label==[]:
-        ax.fill_between(x*1e3, y0, y1, where=w, color=color, edgecolor='none')
-    else:
-        ax.fill_between(x*1e3, y0, y1, where=w, color=color, label=label,edgecolor='none')
-
-
-def plotside(ax, h, width=0.4):
-    ax.plot([0, 48*60000, 48*60000, 0], h + np.array([width, width, -width, -width]), 'w', linewidth=0.5, color='w')
-
-#%% Abbildung
+#%% Figure
+# colors
 bgc = np.array([1,1,1])*0
 tcb = np.array([103,169,240])/255
 tcw = np.array([1,1,1])*1
 cg  = np.array([1,1,1])*0.3
+
+
 fig, ax0 = plt.subplots(1, constrained_layout=True, figsize=(16,5))
-fig.patch.set_facecolor(bgc)
+fig.patch.set_facecolor(bgc)        # set background color to black
 axs = [ax0.twiny(), ax0]
 
 for ax in axs:
     ax.set_facecolor(bgc)
-    ax.xaxis.set_ticks(np.arange(5*6e4, 50*60000, 5*60000))
-    formatter = matplotlib.ticker.FuncFormatter(lambda s, x: time.strftime('%M:%S', time.gmtime(s // 1000)))
-    ax.xaxis.set_major_formatter(formatter)
-    ax.set_xlim(0, 45*60000)
-ax.set_xlabel('Zeit (mm:ss, laufend)')
+#    ax.xaxis.set_ticks(np.arange(5*6e4, 50*60000, 5*60000))
+#    formatter = matplotlib.ticker.FuncFormatter(lambda s, x: time.strftime('%M:%S', time.gmtime(s)))
+#    ax.xaxis.set_major_formatter(formatter)
+#    ax.set_xlim(0, 45*60000)
+ax.set_xlabel('time (mm:ss, continuous)')
 
 
 yticks = [0]
-ylabel = ['              Allgemeines']
+ylabel = ['              general']
 ax.yaxis.set_ticks(yticks)
 ax.set_yticklabels(ylabel)
 ax.set_ylim([-1, 1])
-c = 0; l = 0.1; j = 0
+
+c = 0
+l = 1
+teams[0].possession.plot(ax, tcb, label = 'possession', lower=c-l, upper=c+l)
+
+
+#%%
+c = 0; l = 0.1; j = 0; #
 plotside(ax, 0, width=l)
 ax.plot(np.ones(2)*(18*6e4+50e3), [-1, +1], '--', linewidth=3, label='Halbzeitpause', color=[.5,.5,.5])
 ax.plot(1e3*b['Tor'][0], np.ones_like(b['Tor'][0])*c, '*', color=tcb, markersize=20, markeredgecolor=cg)
