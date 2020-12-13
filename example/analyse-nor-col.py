@@ -5,8 +5,6 @@ from matplotlib import pyplot as plt
 import matplotlib
 import numpy as np
 import time
-
-
 params = {"ytick.color" : "w",
           "xtick.color" : "w",
           "axes.labelcolor" : "w",
@@ -15,12 +13,67 @@ plt.rcParams.update(params)
 font = {'family' : 'normal',
         'weight' : 'bold',
         'size'   : 16}
-
 matplotlib.rc('font', **font)
 
-din = pd.read_csv('col-nor.csv')
-cats = pd.DataFrame(din, columns=['Work Item'])
-cats.  
+
+def trackerDate(datestr):
+    return datetime.strptime(datestr, '%d.%m.%Y %H:%M:%S')
+
+
+def splitWilli(instr):
+    sstr = instr.split('_')
+    if len(sstr) == 3:
+        cat     = sstr[1]
+        team    = sstr[2]
+    else:
+        cat     = sstr[1]
+        team    = 'referee'
+    return cat, team
+    
+iData   = pd.read_csv('col-nor.csv')
+rawCats = iData['Work Item']
+game    = dict()
+game['category']    = np.empty_like(rawCats)
+game['team']        = np.empty_like(rawCats)
+game['start']       = np.empty_like(rawCats)
+game['end']        = np.empty_like(rawCats)
+t0 = trackerDate(iData['Start'][len(rawCats)-1])
+
+for idi, rawCat in enumerate(rawCats):
+    cat, team = splitWilli(rawCat)
+    game['category'][idi]   = cat
+    game['team'][idi]       = team
+    game['start'][idi]      = (trackerDate(iData['Start'][idi]) - t0).total_seconds()
+    game['end'][idi]        = (trackerDate(iData['End'][idi]) - t0).total_seconds()
+
+
+#%%
+#def parseDataFrame(dataframe, language='willi'):
+
+
+class IntervallAction():
+    def __init__(self, start, stop, end):
+        self.start      = []
+        self.stop       = []
+        self.duration   = []
+
+
+class Team:
+    def __init__(self):
+        self.possession = []
+        self.attack     = []
+        self.penalty    = []
+        
+        self.pThrow     = []
+        self.passes     = []
+        self.misspass   = []
+
+    def setIntervallProperty(self, category, startTime, stopTime):
+        interObject = np.zeros((len(startTime), 3))
+        for idt in range(0, len(start)):
+            x = '0'
+            
+
 
 #%%
 def importTag(fName, t0   = datetime(1900, 1, 1, 0, 0, 0, 0)):
