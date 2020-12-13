@@ -15,40 +15,45 @@ font = {'family' : 'normal',
         'size'   : 16}
 matplotlib.rc('font', **font)
 
-
-def trackerDate(datestr):
-    return datetime.strptime(datestr, '%d.%m.%Y %H:%M:%S')
-
-
-def splitWilli(instr):
-    sstr = instr.split('_')
-    if len(sstr) == 3:
-        cat     = sstr[1]
-        team    = sstr[2]
-    else:
-        cat     = sstr[1]
-        team    = 'referee'
-    return cat, team
-    
-iData   = pd.read_csv('col-nor.csv')
-rawCats = iData['Work Item']
-game    = dict()
-game['category']    = np.empty_like(rawCats)
-game['team']        = np.empty_like(rawCats)
-game['start']       = np.empty_like(rawCats)
-game['end']        = np.empty_like(rawCats)
-t0 = trackerDate(iData['Start'][len(rawCats)-1])
-
-for idi, rawCat in enumerate(rawCats):
-    cat, team = splitWilli(rawCat)
-    game['category'][idi]   = cat
-    game['team'][idi]       = team
-    game['start'][idi]      = (trackerDate(iData['Start'][idi]) - t0).total_seconds()
-    game['end'][idi]        = (trackerDate(iData['End'][idi]) - t0).total_seconds()
-
-
-#%%
+#%% FUNCTION AND DEFINITION SECTION
 #def parseDataFrame(dataframe, language='willi'):
+class Game:
+    def __init__(self):
+        self.category   = []
+        self.team       = []
+        self.start      = []
+        self.end        = []
+    
+    def readGameFromFrame(self, frame, language='willi', t0=[]):
+        if language == 'willi':
+            self.category   = np.empty_like(rawCats)
+            self.team       = np.empty_like(rawCats)
+            self.start      = np.empty_like(rawCats)
+            self.end        = np.empty_like(rawCats)
+        if not t0:
+            t0 = self.trackerDate(frame['Start'][len(rawCats)-1])
+        for idi, rawCat in enumerate(frame['Work Item']):
+            cat, team           = self.splitWilli(rawCat)
+            self.category[idi]  = cat
+            self.team[idi]      = team
+            self.start[idi]     = (self.trackerDate(frame['Start'][idi]) - t0).total_seconds()
+            self.end[idi]       = (self.trackerDate(frame['End'][idi]) - t0).total_seconds()
+
+
+    @staticmethod
+    def trackerDate(datestr):
+        return datetime.strptime(datestr, '%d.%m.%Y %H:%M:%S')
+
+    @staticmethod
+    def splitWilli(instr):
+        sstr = instr.split('_')
+        if len(sstr) == 3:
+            cat     = sstr[1]
+            team    = sstr[2]
+        else:
+            cat     = sstr[1]
+            team    = 'referee'
+        return cat, team
 
 
 class IntervallAction():
@@ -74,6 +79,9 @@ class Team:
             x = '0'
             
 
+iData   = pd.read_csv('col-nor.csv')
+norcol  = Game()
+norcol.readGameFromFrame(iData)
 
 #%%
 def importTag(fName, t0   = datetime(1900, 1, 1, 0, 0, 0, 0)):
